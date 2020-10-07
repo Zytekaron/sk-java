@@ -1,0 +1,89 @@
+LOGIC_OP = KEYWORD(AND) | KEYWORD(OR)
+COMP_OP = EQ | LSS | GTR | LEQ | GEQ
+
+
+------------------------------------------------------------------------------------------------------------------------
+
+
+expression      : KEYWORD(var) IDENTIFIER EQUALS expression
+                : comparison (LOGIC_OP comparison)*
+
+comparison      : NOT comparison-expr
+                : arithmetic ((COMP_OP) arithmetic)*
+
+arithmetic      : term ((PLUS|MINUS) term)*
+
+term            : factor ((MUL|DIV) factor)*
+
+factor          : (PLUS|MINUS) factor
+                : power
+
+power           : atom (POW factor)*
+
+atom            : INT|LONG|DOUBLE|STRING
+                : LPAREN expr RPAREN
+
+
+------------------------------------------------------------------------------------------------------------------------
+
+primary-expr    : var-def
+                : dn-def
+                : expr
+
+expr            : if-expr
+                : for-expr
+                : while-expr
+                : switch-expr!
+                : comparison (LOGIC_OP comparison)* :*SEMICOLON
+
+comparison      : NOT comparison-expr
+                : arithmetic ((COMP_OP) arithmetic)*
+
+arithmetic      : term ((PLUS|MINUS) term)*
+
+term            : factor ((MULTIPLY|DIVIDE|MODULO) factor)*
+
+factor          : (PLUS|MINUS) factor
+                : power
+
+power           : atom (POW factor)*
+
+atom            : INT|LONG|DOUBLE|CHAR|STRING
+                : array-lit
+                : object-lit
+                : LPAREN expr RPAREN
+
+
+
+array-literal   : LBRACKET (expr (COMMA expr)*)? RBRACKET
+object-literal  : LBRACE (object-key! COLON expr COMMA?)* RBRACE
+
+if-expr         : KEYWORD(if) LPAREN expr RPAREN lenient-scope (KEYWORD(else) lenient-scope)?
+for-expr        : KEYWORD(for) LPAREN expr? SEMICOLON expr? SEMICOLON expr? SEMICOLON
+while-expr      : KEYWORD(while) LPAREN expr RPAREN lenient-scope
+switch-expr!    : KEYWORD(switch) LPAREN expr RPAREN LBRACE !! RBRACE
+
+var-def         : KEYWORD(var) IDENTIFIER (EQUALS expression)?
+
+fn-def          : KEYWORD(fn) IDENTIFIER (LPAREN (fn-def-arg (COMMA fn-def-arg)*)? RPAREN)? strict-scope?
+fn-def-arg      : SPREAD? IDENTIFIER (COLON <type>)? (EQUALS expr)?
+fn-call         : IDENTIFIER LPAREN expr (COMMA expr)* RPAREN
+
+strict-scope    : LBRACE [expr SEMICOLON+]* RBRACE
+lenient-scope   : expr SEMICOLON+ | strict-scope
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

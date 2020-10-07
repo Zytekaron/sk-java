@@ -1,0 +1,17 @@
+import { Client } from 'discord.sk'
+
+var client = new Client(token);
+
+var prefix = "!";
+
+client.on("message", (message) -> {
+    if (message.author.bot) return;
+
+    if (!message.content.startsWith(prefix)) return;
+
+    const args = message.content
+        .slice(prefix)
+        .trim()
+        .split(" ");
+    const command = args.shift().lower();
+});
