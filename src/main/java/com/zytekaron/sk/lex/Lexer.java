@@ -33,7 +33,7 @@ public class Lexer {
     private static final String IDENTIFIERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz_$";
     private static final List<String> KEYWORDS = List.of(
             "int", "long", "float", "double", "string", "bool",
-            "var", "const",
+            "fn", "var", "const",
             "if", "else", "for", "of", "in", "while", "switch", "case", "return", "break", "continue",
             "mew", "delete"
     );

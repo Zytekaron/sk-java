@@ -27,10 +27,13 @@ public class FunctionParameterNode extends Node {
     private final boolean spread;
     
     public FunctionParameterNode(Token name, Node defaultValue, boolean spread) {
-        super(name, defaultValue);
+        super(name);
         this.name = name;
         this.defaultValue = defaultValue;
         this.spread = spread;
+        if (defaultValue != null) {
+            setEnd(defaultValue.getEnd());
+        }
     }
     
     @Override

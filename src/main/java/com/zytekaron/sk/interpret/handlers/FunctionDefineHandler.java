@@ -23,7 +23,6 @@ import com.zytekaron.sk.struct.Context;
 import com.zytekaron.sk.struct.Token;
 import com.zytekaron.sk.struct.VariableTable;
 import com.zytekaron.sk.types.SkValue;
-import com.zytekaron.sk.types.error.SkRuntimeError;
 
 public class FunctionDefineHandler implements Handler {
     private final Interpreter interpreter;
@@ -43,10 +42,7 @@ public class FunctionDefineHandler implements Handler {
         Token token = node.getName();
         String name = token.getValue();
         
-        if (table.contains(name)) {
-            return table.get(name);
-        } else {
-            return new SkRuntimeError(token, context, "'" + name + "' is not defined");
-        }
+        table.put(name, null);
+        return null; // todo replace with Function()
     }
 }

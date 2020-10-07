@@ -31,7 +31,7 @@ public class ParseResult {
     public Node register(ParseResult parseResult) {
         advancements += parseResult.advancements;
         if (!parseResult.success()) {
-            error = getError();
+            error = parseResult.getError();
         }
         return parseResult.getResult();
     }

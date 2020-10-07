@@ -99,7 +99,7 @@ public class Main {
             ((SkError) value).raise();
             return;
         }
-        System.out.println("Result: " + value.getType() + "(" + value + ")");
+        System.out.println("Result: " + (value == null ? "?" : value.getType()) + "(" + value + ")");
         
         System.out.println('\n');
     }

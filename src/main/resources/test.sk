@@ -1,1 +1,1 @@
-fn func() { 2 + 2; };
+fn func(a, b = 0) { var x = 2 + 2; };
