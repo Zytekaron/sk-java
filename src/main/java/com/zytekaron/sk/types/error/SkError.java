@@ -54,7 +54,14 @@ public abstract class SkError extends SkValue {
     }
     
     public void raise() {
-        System.out.println(toString());
+        String text = toString()
+                .replace("\r", "\\r")
+                .replace("\n", "\\n")
+                .replace("\b", "\\b");
+        System.out.println(text);
+        System.out.println("File " + start.getFile());
+        System.out.println("Line " + start.getLine() + " to " + end.getLine());
+        System.out.println("Column " + start.getColumn() + " to " + end.getColumn());
     }
     
     @Override
