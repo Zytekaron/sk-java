@@ -44,7 +44,7 @@ public class Lexer {
     private Character currentChar;
     
     public Lexer(String text) {
-        this.text = text;
+        this.text = "fn module() {" + text + "\n};";
         advance();
     }
     
@@ -59,7 +59,7 @@ public class Lexer {
     
     public LexResult<List<Token>> tokenize() {
         LexResult<List<Token>> result = new LexResult<>();
-        
+
         List<Token> tokens = new ArrayList<>();
         
         Token token;
@@ -68,7 +68,7 @@ public class Lexer {
             token = null;
             res = null;
             
-            if (currentChar == ' ' || currentChar == '\t') {
+            if (currentChar == ' ' || currentChar == '\t' || currentChar == '\r' || currentChar == '\n') {
                 advance();
                 continue;
             } else if (currentChar == '"') {
