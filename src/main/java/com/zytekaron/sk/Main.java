@@ -46,14 +46,12 @@ public class Main {
     public static void main(String[] args) {
         String text1 = "2 * (2 ** -5. / 3) - (1./3) // lol 55";
         String text2 = "123.456 + 789 + \"this is \\\" \\' \\n \\t a string\" + 445";
-        String text3 = "(var abc = 123) + 7 + abc";
         
         globalContext.setVariableTable(globalVariables);
         
         String content = Objects.requireNonNull(getResourceFileAsString("test.sk"));
-        String[] lines = content.split("\n");
         
-        for (String line : lines) run(line.trim());
+        run(content);
 //        repl();
     }
     
