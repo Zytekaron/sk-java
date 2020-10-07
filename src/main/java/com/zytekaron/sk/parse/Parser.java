@@ -56,14 +56,13 @@ public class Parser {
         if (currentToken.getType() == EOF) {
             return new ParseResult().success(null);
         }
-        ParseResult result = primaryExpression();
-        if (!result.success()) {
-            return result;
-        }
-        if (!isCurrentTokenType(EOF)) {
-            SkError error = new SkParsingError(currentToken, "Unexpected end of input: expected primary expression, found '" + currentToken + "'");
-            return result.failure(error);
-        }
+        ParseResult result;
+        do {
+            result = primaryExpression();
+            if (!result.success()) {
+                return result;
+            }
+        } while (!isCurrentTokenType(EOF));
         return result;
     }
     
@@ -76,14 +75,21 @@ public class Parser {
         ParseResult result = new ParseResult();
         
         Node node;
-        if (isCurrentTokenKeyword("var")) {
+        
+        if (isCurrentTokenKeyword("fn")) {
+            ParseResult res = defineFunction();
+            node = result.register(res);
+            if (!result.success()) {
+                return result;
+            }
+        } else if (isCurrentTokenKeyword("var")) {
             ParseResult res = defineVariable();
             node = result.register(res);
             if (!result.success()) {
                 return result;
             }
-        } else if (isCurrentTokenKeyword("fn")) {
-            ParseResult res = defineFunction();
+        } else if (isCurrentTokenType(LBRACE)) {
+            ParseResult res = scope();
             node = result.register(res);
             if (!result.success()) {
                 return result;
@@ -98,11 +104,12 @@ public class Parser {
         
         if (isCurrentTokenType(SEMICOLON)) {
             advance(result);
-            return result.success(node);
-        } else {
-            SkError error = new SkParsingError(currentToken, "Expected ';' but instead found '" + currentToken + "'");
-            return result.failure(error); // <#> is this a problem? it's been registered
         }
+        return result.success(node);
+//        } else {
+//            SkError error = new SkParsingError(currentToken, "Expected ';' but instead found '" + currentToken + "'");
+//            return result.failure(error); // <#> is this a problem? it's been registered
+//        }
     }
     
     private ParseResult expression() {
@@ -120,13 +127,7 @@ public class Parser {
             return result;
         }
         
-//        if (isCurrentTokenType(SEMICOLON)) {
-//            advance(result);
         return result.success(node);
-//        } else {
-//            SkError error = new SkParsingError(currentToken, "Expected ';' but instead found '" + currentToken + "'");
-//            return result.failure(error); // <#> is this a problem? it's been registered
-//        }
     }
     
     private ParseResult compExpr() {
@@ -250,11 +251,14 @@ public class Parser {
         advance(result);
         
         List<Node> params = new ArrayList<>();
-    
-        if (isCurrentTokenType(LPAREN)) { // allow omitted () for no-args functions
-            while (isCurrentTokenType(LPAREN) || isCurrentTokenType(COMMA)) {
-                advance(result); // yeet the RPAREN or COMMA
-                System.out.println(currentToken);
+        
+        if (isCurrentTokenType(LPAREN)) {
+            while (!isCurrentTokenType(RPAREN)) {
+                advance(result);
+                if (isCurrentTokenType(RPAREN)) {
+                    break;
+                }
+                
                 ParseResult paramResult = functionParameter();
                 Node param = result.register(paramResult);
                 if (!result.success()) {
@@ -262,14 +266,13 @@ public class Parser {
                 }
                 params.add(param);
             }
-        }
-        
-        if (!isCurrentTokenType(RPAREN)) {
-            SkError error = new SkParsingError(currentToken, "Expected ')' but instead found '" + currentToken + "'");
-            return result.failure(error);
-        }
-        advance(result);
     
+            if (!isCurrentTokenType(RPAREN)) {
+                SkError error = new SkParsingError(currentToken, "Expected ')' but instead found '" + currentToken + "'");
+                return result.failure(error);
+            }
+            advance(result);
+        }
         ParseResult scopeResult = strictScope();
         Node scope = result.register(scopeResult);
         if (!result.success()) {
@@ -315,12 +318,7 @@ public class Parser {
         return result.success(param);
     }
     
-    private ParseResult lenientScope() {
-        if (isCurrentTokenType(SEMICOLON)) {
-            Node node = new ScopeNode(new ArrayList<>());
-            return new ParseResult().success(node);
-        }
-        
+    private ParseResult scope() {
         if (isCurrentTokenType(LBRACE)) {
             return strictScope();
         } else {
@@ -337,15 +335,19 @@ public class Parser {
     
     private ParseResult strictScope() {
         ParseResult result = new ParseResult();
-        
+    
         if (!isCurrentTokenType(LBRACE)) {
             SkError error = new SkParsingError(currentToken, "Expected '{' but instead found '" + currentToken + "'");
             return result.failure(error);
         }
-        
+    
         List<Node> expressions = new ArrayList<>();
         while (!isCurrentTokenType(RBRACE)) {
             advance(result);
+            
+            if (isCurrentTokenType(RBRACE)) {
+                break;
+            }
             
             ParseResult expression = primaryExpression();
             Node expr = result.register(expression);
@@ -355,7 +357,7 @@ public class Parser {
             
             expressions.add(expr);
         }
-        
+    
         if (!isCurrentTokenType(RBRACE)) {
             SkError error = new SkParsingError(currentToken, "Expected '}' but instead found '" + currentToken + "'");
             return result.failure(error);
