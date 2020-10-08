@@ -87,6 +87,16 @@ public class Lexer {
                         advance();
                     }
                     advance();
+                } else if (currentChar == '*') {
+                    Character lastChar = currentChar;
+                    while (true) {
+                        advance();
+                        if (lastChar == '*' && currentChar == '/') {
+                            break;
+                        }
+                        lastChar = currentChar;
+                    }
+                    advance();
                 } else if (currentChar == '=') {
                     token = new Token(DIVIDE_EQUALS, start, pos);
                     advance();
