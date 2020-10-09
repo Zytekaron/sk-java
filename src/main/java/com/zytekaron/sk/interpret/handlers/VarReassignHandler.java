@@ -16,34 +16,50 @@
 
 package com.zytekaron.sk.interpret.handlers;
 
+import com.zytekaron.sk.interpret.Interpreter;
 import com.zytekaron.sk.parse.nodes.Node;
-import com.zytekaron.sk.parse.nodes.VarDeclareNode;
+import com.zytekaron.sk.parse.nodes.VarReassignNode;
 import com.zytekaron.sk.struct.Context;
 import com.zytekaron.sk.struct.Token;
 import com.zytekaron.sk.struct.VariableTable;
-import com.zytekaron.sk.types.SkNull;
+import com.zytekaron.sk.struct.result.RuntimeResult;
 import com.zytekaron.sk.types.SkValue;
+import com.zytekaron.sk.types.error.SkError;
 import com.zytekaron.sk.types.error.SkRuntimeError;
 
-public class VarDeclareHandler implements Handler {
+public class VarReassignHandler implements Handler {
+    private final Interpreter interpreter;
     
-    @Override
-    public SkValue handle(Node node, Context context) {
-        return handle((VarDeclareNode) node, context);
+    public VarReassignHandler(Interpreter interpreter) {
+        this.interpreter = interpreter;
     }
     
-    private SkValue handle(VarDeclareNode node, Context context) {
+    @Override
+    public RuntimeResult handle(Node node, Context context) {
+        return handle((VarReassignNode) node, context);
+    }
+    
+    private RuntimeResult handle(VarReassignNode node, Context context) {
+        RuntimeResult result = new RuntimeResult();
+        
         VariableTable table = context.getVariableTable();
         
         Token nameToken = node.getName();
         String name = nameToken.getValue();
+        Node valueNode = node.getValue();
         
-        if (table.containsHere(name)) {
-            return new SkRuntimeError(node, context, "Variable '" + name + "' is already defined in this scope");
+        RuntimeResult valueResult = interpreter.visit(valueNode, context);
+        SkValue value = result.register(valueResult);
+        if (result.shouldReturn()) {
+            return result;
         }
         
-        SkNull value = new SkNull();
+        if (table.containsHere(name)) {
+            SkError error = new SkRuntimeError(node, context, "Variable '" + name + "' is already defined in this scope");
+            return result.failure(error);
+        }
+        
         table.put(name, value);
-        return value;
+        return result.success(value);
     }
 }

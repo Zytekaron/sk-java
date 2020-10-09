@@ -21,26 +21,32 @@ import com.zytekaron.sk.parse.nodes.VarAccessNode;
 import com.zytekaron.sk.struct.Context;
 import com.zytekaron.sk.struct.Token;
 import com.zytekaron.sk.struct.VariableTable;
+import com.zytekaron.sk.struct.result.RuntimeResult;
 import com.zytekaron.sk.types.SkValue;
+import com.zytekaron.sk.types.error.SkError;
 import com.zytekaron.sk.types.error.SkRuntimeError;
 
 public class VarAccessHandler implements Handler {
     
     @Override
-    public SkValue handle(Node node, Context context) {
+    public RuntimeResult handle(Node node, Context context) {
         return handle((VarAccessNode) node, context);
     }
     
-    private SkValue handle(VarAccessNode node, Context context) {
+    private RuntimeResult handle(VarAccessNode node, Context context) {
+        RuntimeResult result = new RuntimeResult();
+        
         VariableTable table = context.getVariableTable();
     
         Token token = node.getName();
         String name = token.getValue();
         
         if (table.contains(name)) {
-            return table.get(name);
+            SkValue value = table.get(name);
+            return result.success(value);
         } else {
-            return new SkRuntimeError(token, context, "'" + name + "' is not defined");
+            SkError error = new SkRuntimeError(token, context, "'" + name + "' is not defined");
+            return result.failure(error);
         }
     }
 }

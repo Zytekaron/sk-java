@@ -20,19 +20,21 @@ import com.zytekaron.sk.parse.nodes.Node;
 import com.zytekaron.sk.parse.nodes.StringNode;
 import com.zytekaron.sk.struct.Context;
 import com.zytekaron.sk.struct.Token;
-import com.zytekaron.sk.types.SkBool;
-import com.zytekaron.sk.types.SkValue;
+import com.zytekaron.sk.struct.result.RuntimeResult;
+import com.zytekaron.sk.types.primitive.SkBool;
 
 public class BoolHandler implements Handler {
     
     @Override
-    public SkValue handle(Node node, Context context) {
-        return handle((StringNode) node, context);
+    public RuntimeResult handle(Node node, Context context) {
+        return handle((StringNode) node);
     }
     
-    private SkValue handle(StringNode node, Context context) {
+    private RuntimeResult handle(StringNode node) {
         Token token = node.getToken();
         String value = token.getValue();
-        return SkBool.fromString(value);
+        
+        SkBool bool = SkBool.fromString(value);
+        return new RuntimeResult().success(bool);
     }
 }

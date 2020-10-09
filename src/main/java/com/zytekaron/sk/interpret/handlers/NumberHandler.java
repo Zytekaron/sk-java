@@ -20,18 +20,21 @@ import com.zytekaron.sk.parse.nodes.Node;
 import com.zytekaron.sk.parse.nodes.NumberNode;
 import com.zytekaron.sk.struct.Context;
 import com.zytekaron.sk.struct.Token;
+import com.zytekaron.sk.struct.result.RuntimeResult;
 import com.zytekaron.sk.types.SkNumber;
-import com.zytekaron.sk.types.SkValue;
 
 public class NumberHandler implements Handler {
     
     @Override
-    public SkValue handle(Node node, Context context) {
-        return handle((NumberNode) node, context);
+    public RuntimeResult handle(Node node, Context context) {
+        return handle((NumberNode) node);
     }
     
-    private SkValue handle(NumberNode node, Context context) {
+    private RuntimeResult handle(NumberNode node) {
         Token token = node.getToken();
-        return SkNumber.fromToken(token);
+        String string = token.getValue();
+        
+        SkNumber number = SkNumber.fromString(string);
+        return new RuntimeResult().success(number);
     }
 }

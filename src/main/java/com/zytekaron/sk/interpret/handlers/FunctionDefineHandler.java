@@ -18,11 +18,21 @@ package com.zytekaron.sk.interpret.handlers;
 
 import com.zytekaron.sk.interpret.Interpreter;
 import com.zytekaron.sk.parse.nodes.FunctionDefineNode;
+import com.zytekaron.sk.parse.nodes.FunctionParameterNode;
 import com.zytekaron.sk.parse.nodes.Node;
+import com.zytekaron.sk.parse.nodes.ScopeNode;
 import com.zytekaron.sk.struct.Context;
 import com.zytekaron.sk.struct.Token;
 import com.zytekaron.sk.struct.VariableTable;
+import com.zytekaron.sk.struct.result.RuntimeResult;
 import com.zytekaron.sk.types.SkValue;
+import com.zytekaron.sk.types.error.SkError;
+import com.zytekaron.sk.types.error.SkRuntimeError;
+import com.zytekaron.sk.types.object.SkFunction;
+import com.zytekaron.sk.types.object.SkParameter;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class FunctionDefineHandler implements Handler {
     private final Interpreter interpreter;
@@ -32,17 +42,73 @@ public class FunctionDefineHandler implements Handler {
     }
     
     @Override
-    public SkValue handle(Node node, Context context) {
+    public RuntimeResult handle(Node node, Context context) {
         return handle((FunctionDefineNode) node, context);
     }
     
-    private SkValue handle(FunctionDefineNode node, Context context) {
+    private RuntimeResult handle(FunctionDefineNode node, Context context) {
+        RuntimeResult result = new RuntimeResult();
+        
         VariableTable table = context.getVariableTable();
         
         Token token = node.getName();
         String name = token.getValue();
         
-        table.put(name, null);
-        return null; // todo replace with Function()
+        List<Node> nodes = node.getParams();
+        
+        List<SkParameter> params = new ArrayList<>();
+        for (Node inputNode : node.getParams()) {
+            FunctionParameterNode input = (FunctionParameterNode) inputNode;
+            
+            SkValue defaultValue = null;
+            if (input.getDefaultValue() != null) {
+                RuntimeResult defaultResult = interpreter.visit(input.getDefaultValue(), context);
+                defaultValue = result.register(defaultResult);
+                if (result.shouldReturn()) {
+                    return result;
+                }
+            }
+            
+            SkParameter param = new SkParameter(input.getName().getValue(), input.isSpread(), defaultValue);
+            params.add(param);
+        }
+    
+        // todo idk consider using RuntimeResult here
+        SkError validationError = validateParameters(nodes, params, context);
+        if (validationError != null) {
+            return result.failure(validationError);
+        }
+        
+        ScopeNode scope = (ScopeNode) node.getScope();
+        List<Node> statements = scope.getExpressions();
+        
+        SkFunction function = new SkFunction(params, statements);
+        table.put(name, function);
+        return result.success(function);
+    }
+    
+    private SkError validateParameters(List<Node> nodes, List<SkParameter> params, Context context) {
+        boolean spreadBefore = false;
+        boolean defaultBefore = false;
+        for (int i = 0; i < nodes.size(); i++) {
+            SkParameter param = params.get(i);
+    
+            if (param.isSpread()) {
+                spreadBefore = true;
+            } else if (spreadBefore) {
+                Node node = nodes.get(i);
+                return new SkRuntimeError(node, context, "Unexpected spread operator: already found one");
+            }
+    
+            if (param.getDefaultValue() != null) {
+                defaultBefore = true;
+            } else if (defaultBefore) {
+                Node node = nodes.get(i);
+                return new SkRuntimeError(node, context, "Unexpected required parameter after default parameter");
+            }
+    
+            // todo do type checking here -- if (!param.getDefaultValue().isOfType(param.getType())) error
+        }
+        return null;
     }
 }

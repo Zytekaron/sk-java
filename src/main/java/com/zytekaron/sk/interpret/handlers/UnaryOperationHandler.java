@@ -22,8 +22,15 @@ import com.zytekaron.sk.parse.nodes.UnaryOperationNode;
 import com.zytekaron.sk.struct.Context;
 import com.zytekaron.sk.struct.Token;
 import com.zytekaron.sk.struct.TokenType;
-import com.zytekaron.sk.types.*;
+import com.zytekaron.sk.struct.result.RuntimeResult;
+import com.zytekaron.sk.types.SkNumber;
+import com.zytekaron.sk.types.SkValue;
+import com.zytekaron.sk.types.error.SkError;
 import com.zytekaron.sk.types.error.SkRuntimeError;
+import com.zytekaron.sk.types.object.SkString;
+import com.zytekaron.sk.types.primitive.SkBool;
+import com.zytekaron.sk.types.primitive.SkDouble;
+import com.zytekaron.sk.types.primitive.SkInt;
 
 import static com.zytekaron.sk.struct.TokenType.*;
 
@@ -35,26 +42,35 @@ public class UnaryOperationHandler implements Handler {
     }
     
     @Override
-    public SkValue handle(Node node, Context context) {
+    public RuntimeResult handle(Node node, Context context) {
         return handle((UnaryOperationNode) node, context);
     }
     
-    private SkValue handle(UnaryOperationNode node, Context context) {
+    private RuntimeResult handle(UnaryOperationNode node, Context context) {
+        RuntimeResult result = new RuntimeResult();
+        
         Token operator = node.getOperator();
         Node operand = node.getOperand();
+    
+        RuntimeResult valueResult = interpreter.visit(operand, context);
+        SkValue value = result.register(valueResult);
+        if (result.shouldReturn()) {
+            return result;
+        }
         
-        SkValue value = interpreter.visit(operand, context);
-        
+        SkValue obj;
         if (value instanceof SkNumber) {
-            return handleNumber((SkNumber) value, operator, operand, context);
+            obj = handleNumber((SkNumber) value, operator, operand, context);
         } else if (value instanceof SkString) {
             SkNumber number = SkNumber.fromString(value.toString());
-            return handleNumber(number, operator, operand, context);
+            obj = handleNumber(number, operator, operand, context);
         } else if (value instanceof SkBool) {
-            return handleBoolean((SkBool) value, operator, operand, context);
+            obj = handleBoolean((SkBool) value, operator, operand, context);
         } else {
-            return new SkRuntimeError(operator.getStart(), operand.getEnd(), context, "Expected number or string type, instead found " + value.getType());
+            SkError error = new SkRuntimeError(operator.getStart(), operand.getEnd(), context, "Expected number or string type, instead found " + value.getType());
+            return result.failure(error);
         }
+        return result.success(obj);
     }
     
     private SkValue handleNumber(SkNumber number, Token operator, Node operand, Context context) {

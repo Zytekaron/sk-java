@@ -22,12 +22,13 @@ import com.zytekaron.sk.parse.nodes.Node;
 import com.zytekaron.sk.struct.Context;
 import com.zytekaron.sk.struct.Token;
 import com.zytekaron.sk.struct.TokenType;
-import com.zytekaron.sk.types.SkBool;
+import com.zytekaron.sk.struct.result.RuntimeResult;
 import com.zytekaron.sk.types.SkNumber;
-import com.zytekaron.sk.types.SkString;
 import com.zytekaron.sk.types.SkValue;
 import com.zytekaron.sk.types.error.SkError;
 import com.zytekaron.sk.types.error.SkRuntimeError;
+import com.zytekaron.sk.types.object.SkString;
+import com.zytekaron.sk.types.primitive.SkBool;
 
 public class BinaryOperationHandler implements Handler {
     private final Interpreter interpreter;
@@ -37,19 +38,23 @@ public class BinaryOperationHandler implements Handler {
     }
     
     @Override
-    public SkValue handle(Node node, Context context) {
+    public RuntimeResult handle(Node node, Context context) {
         return handle((BinaryOperationNode) node, context);
     }
     
-    private SkValue handle(BinaryOperationNode node, Context context) {
-        SkValue left = interpreter.visit(node.getLeftOperand(), context);
-        if (left instanceof SkError) {
-            return left;
-        }
+    private RuntimeResult handle(BinaryOperationNode node, Context context) {
+        RuntimeResult result = new RuntimeResult();
         
-        SkValue right = interpreter.visit(node.getRightOperand(), context);
-        if (right instanceof SkError) {
-            return right;
+        RuntimeResult leftResult = interpreter.visit(node.getLeftOperand(), context);
+        SkValue left = result.register(leftResult);
+        if (result.shouldReturn()) {
+            return result;
+        }
+    
+        RuntimeResult rightResult = interpreter.visit(node.getRightOperand(), context);
+        SkValue right = result.register(rightResult);
+        if (result.shouldReturn()) {
+            return result;
         }
         
         Token operation = node.getOperation();
@@ -58,11 +63,13 @@ public class BinaryOperationHandler implements Handler {
         try {
             SkValue value = execute(left, operationType, right, node, context);
             if (value == null) {
-                return new SkRuntimeError(node, context, "An error occurred whilst performing this operation.");
+                SkError error = new SkRuntimeError(node, context, "An error occurred whilst performing this operation.");
+                return result.failure(error);
             }
-            return value;
+            return result.success(value);
         } catch (ArithmeticException e) {
-            return new SkRuntimeError(node, context, "An error occurred whilst performing this operation.");
+            SkError error = new SkRuntimeError(node, context, "An error occurred whilst performing this operation.");
+            return result.failure(error);
         }
     }
     

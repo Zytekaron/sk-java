@@ -18,9 +18,9 @@ package com.zytekaron.sk.interpret.handlers;
 
 import com.zytekaron.sk.parse.nodes.Node;
 import com.zytekaron.sk.struct.Context;
-import com.zytekaron.sk.types.SkValue;
+import com.zytekaron.sk.struct.result.RuntimeResult;
 
 public interface Handler {
     
-    SkValue handle(Node node, Context context);
+    RuntimeResult handle(Node node, Context context);
 }
