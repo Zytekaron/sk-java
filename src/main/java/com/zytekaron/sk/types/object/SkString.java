@@ -14,17 +14,22 @@
    limitations under the License.
 */
 
-package com.zytekaron.sk.types;
+package com.zytekaron.sk.types.object;
 
 import com.zytekaron.sk.struct.TypeConverter;
+import com.zytekaron.sk.types.SkObject;
+import com.zytekaron.sk.types.SkValue;
+import com.zytekaron.sk.types.primitive.SkBool;
+import com.zytekaron.sk.types.primitive.SkDouble;
+import com.zytekaron.sk.types.primitive.SkInt;
 import lombok.Getter;
 
 @Getter
-public class SkString extends SkValue {
+public class SkString extends SkObject {
     private final String value;
     
     public SkString(String value) {
-        super("String");
+        super();
         this.value = value;
     }
     

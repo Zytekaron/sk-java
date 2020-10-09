@@ -14,26 +14,26 @@
  *    limitations under the License.
  */
 
-package com.zytekaron.sk.types;
+package com.zytekaron.sk.types.object;
 
-public class SkNull extends SkValue {
+import com.zytekaron.sk.types.SkValue;
+import lombok.Getter;
+
+@Getter
+public class SkParameter {
+    private final String name;
+    private final SkValue defaultValue;
+    private final boolean spread;
     
-    public SkNull() {
-        super("null");
-    }
-    
-    @Override
-    public <T> T into(Class<T> clazz) {
-        throw new RuntimeException("Unsupported operation 'cast' for type 'null'");
-    }
-    
-    @Override
-    protected int compare(SkValue other) {
-        return other instanceof SkNull ? 0 : 1;
+    // todo implement types ie SkType
+    public SkParameter(String name, boolean spread, SkValue defaultValue) {
+        this.name = name;
+        this.spread = spread;
+        this.defaultValue = defaultValue;
     }
     
     @Override
     public String toString() {
-        return "null";
+        return String.format("SkParam(%s = %s)", name, defaultValue);
     }
 }

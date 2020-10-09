@@ -14,35 +14,40 @@
    limitations under the License.
 */
 
-package com.zytekaron.sk.types;
+package com.zytekaron.sk.types.primitive;
 
 import com.zytekaron.sk.struct.Utils;
+import com.zytekaron.sk.types.SkNumber;
+import com.zytekaron.sk.types.SkValue;
+import com.zytekaron.sk.types.object.SkString;
 import lombok.Getter;
 
+import java.util.Map;
+import java.util.function.Function;
+
 @Getter
-public class SkDouble extends SkNumber {
-    private final double value;
+public class SkInt extends SkNumber {
+    private final int value;
+    private final Map<Class<? extends SkValue>, Function<Integer, SkValue>> converter = Map.of(
+            SkInt.class, SkInt::new,
+            SkLong.class, SkDouble::new,
+            SkDouble.class, SkDouble::new,
+            SkBool.class, value -> new SkBool(value != 0)
+    );
     
-    public SkDouble(double value) {
-        super("Double");
+    public SkInt(int value) {
+        super("Int");
         this.value = value;
     }
     
     @Override
     @SuppressWarnings("unchecked")
     public <T> T into(Class<T> clazz) {
-        if (SkString.class.equals(clazz)) {
-            return (T) toSkString();
-        } else if (SkInt.class.equals(clazz)) {
-            return (T) new SkInt((int) value);
-        } else if (SkLong.class.equals(clazz)) {
-            return (T) new SkLong((long) value);
-        } else if (SkDouble.class.equals(clazz)) {
-            return (T) new SkDouble(value);
-        } else if (SkBool.class.equals(clazz)) {
-            return (T) new SkBool(value != 0);
+        Function<Integer, SkValue> function = converter.get(clazz);
+        if (function == null) {
+            return null;
         }
-        throw new RuntimeException("Class conversion not defined for type " + clazz.getSimpleName());
+        return (T) function.apply(value);
     }
     
     @Override
@@ -85,56 +90,82 @@ public class SkDouble extends SkNumber {
     
     
     
-    public SkDouble add(int other) {
-        return new SkDouble(value + other);
+    public SkInt add(int other) {
+        return new SkInt(value + other);
+    }
+    
+    public SkLong add(long other) {
+        return new SkLong(value + other);
     }
     
     public SkDouble add(double other) {
         return new SkDouble(value + other);
     }
     
-    public SkDouble subtract(int other) {
-        return new SkDouble(value - other);
+    public SkInt subtract(int other) {
+        return new SkInt(value - other);
+    }
+    
+    public SkLong subtract(long other) {
+        return new SkLong(value - other);
     }
     
     public SkDouble subtract(double other) {
         return new SkDouble(value - other);
     }
     
-    public SkDouble multiply(int other) {
-        return new SkDouble(value * other);
+    public SkInt multiply(int other) {
+        return new SkInt(value * other);
+    }
+    
+    public SkLong multiply(long other) {
+        return new SkLong(value * other);
     }
     
     public SkDouble multiply(double other) {
         return new SkDouble(value * other);
     }
     
-    public SkDouble divide(int other) {
-        return new SkDouble(value / other);
+    public SkInt divide(int other) {
+        return new SkInt(value / other);
+    }
+    
+    public SkLong divide(long other) {
+        return new SkLong(value / other);
     }
     
     public SkDouble divide(double other) {
         return new SkDouble(value / other);
     }
     
-    public SkDouble modulo(int other) {
-        return new SkDouble(value % other);
+    public SkInt modulo(int other) {
+        return new SkInt(value % other);
+    }
+    
+    public SkLong modulo(long other) {
+        return new SkLong(value % other);
     }
     
     public SkDouble modulo(double other) {
         return new SkDouble(value % other);
     }
     
-    public SkDouble power(int other) {
-        return new SkDouble((int) Math.pow(value, other));
+    public SkInt power(int other) {
+        return new SkInt((int) Math.pow(value, other));
+    }
+    
+    public SkLong power(long other) {
+        return new SkLong((long) Math.pow(value, other));
     }
     
     public SkDouble power(double other) {
         return new SkDouble(Math.pow(value, other));
     }
     
+    
+    
     @Override
     public String toString() {
-        return Double.toString(value);
+        return Integer.toString(value);
     }
 }

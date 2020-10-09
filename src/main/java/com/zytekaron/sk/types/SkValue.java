@@ -16,6 +16,8 @@
 
 package com.zytekaron.sk.types;
 
+import com.zytekaron.sk.types.object.SkString;
+import com.zytekaron.sk.types.primitive.SkBool;
 import lombok.Getter;
 
 @Getter

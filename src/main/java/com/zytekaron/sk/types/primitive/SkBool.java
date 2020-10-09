@@ -14,10 +14,22 @@
    limitations under the License.
 */
 
-package com.zytekaron.sk.types;
+package com.zytekaron.sk.types.primitive;
+
+import com.zytekaron.sk.types.SkValue;
+
+import java.util.Map;
+import java.util.function.Function;
 
 public class SkBool extends SkValue {
     private final boolean value;
+    private final Map<Class<? extends SkValue>, Function<Boolean, SkValue>> converter = Map.of(
+            SkInt.class, value -> new SkInt(value ? 1 : 0),
+            SkLong.class, value -> new SkInt(value ? 1 : 0),
+            SkDouble.class, value -> new SkInt(value ? 1 : 0),
+            SkBool.class, SkBool::new,
+            SkChar.class, SkBool::new
+    );
     
     public SkBool(boolean value) {
         super("Boolean");
@@ -27,18 +39,11 @@ public class SkBool extends SkValue {
     @Override
     @SuppressWarnings("unchecked")
     public <T> T into(Class<T> clazz) {
-        if (SkString.class.equals(clazz)) {
-            return (T) toSkString();
-        } else if (SkInt.class.equals(clazz)) {
-            return (T) new SkInt(value ? 1 : 0);
-        } else if (SkLong.class.equals(clazz)) {
-            return (T) new SkLong(value ? 1 : 0);
-        } else if (SkDouble.class.equals(clazz)) {
-            return (T) new SkDouble(value ? 1 : 0);
-        } else if (SkBool.class.equals(clazz)) {
-            return (T) new SkBool(value);
+        Function<Boolean, SkValue> function = converter.get(clazz);
+        if (function == null) {
+            return null;
         }
-        throw new RuntimeException("Class conversion not defined for type " + clazz.getSimpleName());
+        return (T) function.apply(value);
     }
     
     @Override

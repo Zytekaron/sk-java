@@ -14,13 +14,24 @@
    limitations under the License.
 */
 
-package com.zytekaron.sk.types;
+package com.zytekaron.sk.types.primitive;
 
+import com.zytekaron.sk.types.SkValue;
 import lombok.Getter;
+
+import java.util.Map;
+import java.util.function.Function;
 
 @Getter
 public class SkChar extends SkValue {
     private final char value;
+    private final Map<Class<? extends SkValue>, Function<Character, SkValue>> converter = Map.of(
+            SkInt.class, SkInt::new,
+            SkLong.class, SkDouble::new,
+            SkDouble.class, SkDouble::new,
+            SkBool.class, value -> new SkBool(value != 0),
+            SkChar.class, SkChar::new
+    );
     
     public SkChar(char value) {
         super("Int");
@@ -30,20 +41,11 @@ public class SkChar extends SkValue {
     @Override
     @SuppressWarnings("unchecked")
     public <T> T into(Class<T> clazz) {
-        if (SkString.class.equals(clazz)) {
-            return (T) toSkString();
-        } else if (SkInt.class.equals(clazz)) {
-            return (T) new SkInt(value);
-        } else if (SkLong.class.equals(clazz)) {
-            return (T) new SkLong(value);
-        } else if (SkDouble.class.equals(clazz)) {
-            return (T) new SkDouble(value);
-        } else if (SkBool.class.equals(clazz)) {
-            return (T) new SkBool(value != 0);
-        } else if (SkChar.class.equals(clazz)) {
-            return (T) new SkChar(value);
+        Function<Character, SkValue> function = converter.get(clazz);
+        if (function == null) {
+            return null;
         }
-        throw new RuntimeException("Class conversion not defined for type " + clazz.getSimpleName());
+        return (T) function.apply(value);
     }
     
     // todo implement & implement into(SkChar.class) for other types

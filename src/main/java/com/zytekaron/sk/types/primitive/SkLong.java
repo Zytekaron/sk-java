@@ -14,35 +14,40 @@
    limitations under the License.
 */
 
-package com.zytekaron.sk.types;
+package com.zytekaron.sk.types.primitive;
 
 import com.zytekaron.sk.struct.Utils;
+import com.zytekaron.sk.types.SkNumber;
+import com.zytekaron.sk.types.SkValue;
+import com.zytekaron.sk.types.object.SkString;
 import lombok.Getter;
 
+import java.util.Map;
+import java.util.function.Function;
+
 @Getter
-public class SkInt extends SkNumber {
-    private final int value;
+public class SkLong extends SkNumber {
+    private final long value;
+    private final Map<Class<? extends SkValue>, Function<Long, SkValue>> converter = Map.of(
+            SkInt.class, value -> new SkInt(value.intValue()),
+            SkLong.class, SkDouble::new,
+            SkDouble.class, SkDouble::new,
+            SkBool.class, value -> new SkBool(value != 0)
+    );
     
-    public SkInt(int value) {
-        super("Int");
+    public SkLong(long value) {
+        super("Long");
         this.value = value;
     }
     
     @Override
     @SuppressWarnings("unchecked")
     public <T> T into(Class<T> clazz) {
-        if (SkString.class.equals(clazz)) {
-            return (T) toSkString();
-        } else if (SkInt.class.equals(clazz)) {
-            return (T) new SkInt(value);
-        } else if (SkLong.class.equals(clazz)) {
-            return (T) new SkLong(value);
-        } else if (SkDouble.class.equals(clazz)) {
-            return (T) new SkDouble(value);
-        } else if (SkBool.class.equals(clazz)) {
-            return (T) new SkBool(value != 0);
+        Function<Long, SkValue> function = converter.get(clazz);
+        if (function == null) {
+            return null;
         }
-        throw new RuntimeException("Class conversion not defined for type " + clazz.getSimpleName());
+        return (T) function.apply(value);
     }
     
     @Override
@@ -85,8 +90,8 @@ public class SkInt extends SkNumber {
     
     
     
-    public SkInt add(int other) {
-        return new SkInt(value + other);
+    public SkLong add(int other) {
+        return new SkLong(value + other);
     }
     
     public SkLong add(long other) {
@@ -97,8 +102,10 @@ public class SkInt extends SkNumber {
         return new SkDouble(value + other);
     }
     
-    public SkInt subtract(int other) {
-        return new SkInt(value - other);
+    
+    
+    public SkLong subtract(int other) {
+        return new SkLong(value - other);
     }
     
     public SkLong subtract(long other) {
@@ -109,8 +116,10 @@ public class SkInt extends SkNumber {
         return new SkDouble(value - other);
     }
     
-    public SkInt multiply(int other) {
-        return new SkInt(value * other);
+    
+    
+    public SkLong multiply(int other) {
+        return new SkLong(value * other);
     }
     
     public SkLong multiply(long other) {
@@ -121,8 +130,10 @@ public class SkInt extends SkNumber {
         return new SkDouble(value * other);
     }
     
-    public SkInt divide(int other) {
-        return new SkInt(value / other);
+    
+    
+    public SkLong divide(int other) {
+        return new SkLong(value / other);
     }
     
     public SkLong divide(long other) {
@@ -133,8 +144,10 @@ public class SkInt extends SkNumber {
         return new SkDouble(value / other);
     }
     
-    public SkInt modulo(int other) {
-        return new SkInt(value % other);
+    
+    
+    public SkLong modulo(int other) {
+        return new SkLong(value % other);
     }
     
     public SkLong modulo(long other) {
@@ -144,6 +157,8 @@ public class SkInt extends SkNumber {
     public SkDouble modulo(double other) {
         return new SkDouble(value % other);
     }
+    
+    
     
     public SkInt power(int other) {
         return new SkInt((int) Math.pow(value, other));
@@ -161,6 +176,6 @@ public class SkInt extends SkNumber {
     
     @Override
     public String toString() {
-        return Integer.toString(value);
+        return Long.toString(value);
     }
 }

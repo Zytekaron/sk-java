@@ -16,10 +16,9 @@
 
 package com.zytekaron.sk.types;
 
-import com.zytekaron.sk.struct.Token;
-import com.zytekaron.sk.struct.TokenType;
-
-import static com.zytekaron.sk.struct.TokenType.*;
+import com.zytekaron.sk.types.primitive.SkDouble;
+import com.zytekaron.sk.types.primitive.SkInt;
+import com.zytekaron.sk.types.primitive.SkLong;
 
 public abstract class SkNumber extends SkValue {
     
@@ -49,23 +48,6 @@ public abstract class SkNumber extends SkValue {
         } else {
             int i = Integer.parseInt(string);
             return new SkInt(i);
-        }
-    }
-    
-    public static SkNumber fromToken(Token token) {
-        TokenType type = token.getType();
-        String value = token.getValue();
-        if (type == INT) {
-            int i = Integer.parseInt(value);
-            return new SkInt(i);
-        } else if (type == LONG) {
-            long l = Long.parseLong(value);
-            return new SkLong(l);
-        } else if (type == DOUBLE) {
-            double d = Double.parseDouble(value);
-            return new SkDouble(d);
-        } else {
-            return null;
         }
     }
 }
