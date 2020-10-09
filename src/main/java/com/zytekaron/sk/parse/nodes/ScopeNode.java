@@ -20,6 +20,7 @@ import com.zytekaron.sk.struct.Position;
 import lombok.Getter;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Getter
 public class ScopeNode extends Node {
@@ -33,6 +34,8 @@ public class ScopeNode extends Node {
     
     @Override
     public String toString() {
-        return String.format("Scope { %s }", expressions);
+        return String.format("Scope { %s }", expressions.stream()
+                .map(String::valueOf)
+                .collect(Collectors.joining(" ")));
     }
 }

@@ -20,11 +20,11 @@ import com.zytekaron.sk.struct.Token;
 import lombok.Getter;
 
 @Getter
-public class VarDefineNode extends Node {
+public class VarAssignNode extends Node {
     private final Token name;
     private final Node value;
     
-    public VarDefineNode(Token name, Node value) {
+    public VarAssignNode(Token name, Node value) {
         super(name, value);
         this.name = name;
         this.value = value;

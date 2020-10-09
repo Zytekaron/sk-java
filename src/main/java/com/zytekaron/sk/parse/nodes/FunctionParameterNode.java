@@ -22,7 +22,6 @@ import lombok.Getter;
 @Getter
 public class FunctionParameterNode extends Node {
     private final Token name;
-//    private final Token type; todo LATER implement the type here -- allow primitive values and classes, try to exclude Int Long etc.
     private final Node defaultValue;
     private final boolean spread;
     

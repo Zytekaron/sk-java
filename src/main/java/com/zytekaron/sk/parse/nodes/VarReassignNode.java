@@ -20,16 +20,18 @@ import com.zytekaron.sk.struct.Token;
 import lombok.Getter;
 
 @Getter
-public class VarDeclareNode extends Node {
+public class VarReassignNode extends Node {
     private final Token name;
+    private final Node value;
     
-    public VarDeclareNode(Token name) {
+    public VarReassignNode(Token name, Node value) {
         super(name);
         this.name = name;
+        this.value = value;
     }
     
     @Override
     public String toString() {
-        return String.format("VarDecl(%s)", name);
+        return String.format("VarReAsn(%s = %s)", name, value);
     }
 }

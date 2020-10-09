@@ -28,16 +28,10 @@ public class FunctionDefineNode extends Node {
     private final Node scope;
     
     public FunctionDefineNode(Token name, List<Node> params, Node scope) {
-        super(name);
+        super(name); // todo find a good way to pass a Position in for the parameters ?put Position within SkParameter
         this.name = name;
         this.params = params;
         this.scope = scope;
-        
-        if (params.size() == 0) {
-            setEnd(name.getEnd());
-        } else {
-            setEnd(params.get(params.size() - 1).getEnd());
-        }
     }
     
     @Override
