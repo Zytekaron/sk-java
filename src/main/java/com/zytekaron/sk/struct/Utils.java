@@ -16,9 +16,9 @@
 
 package com.zytekaron.sk.struct;
 
-import com.zytekaron.sk.types.SkDouble;
-import com.zytekaron.sk.types.SkInt;
-import com.zytekaron.sk.types.SkLong;
+import com.zytekaron.sk.types.primitive.SkDouble;
+import com.zytekaron.sk.types.primitive.SkInt;
+import com.zytekaron.sk.types.primitive.SkLong;
 import com.zytekaron.sk.types.SkValue;
 
 import java.util.function.Function;

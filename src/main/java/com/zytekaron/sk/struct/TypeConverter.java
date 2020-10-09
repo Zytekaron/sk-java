@@ -17,6 +17,10 @@
 package com.zytekaron.sk.struct;
 
 import com.zytekaron.sk.types.*;
+import com.zytekaron.sk.types.object.SkString;
+import com.zytekaron.sk.types.primitive.SkBool;
+import com.zytekaron.sk.types.primitive.SkDouble;
+import com.zytekaron.sk.types.primitive.SkInt;
 
 // <#> responsibility for math errors is left to the user
 public class TypeConverter {

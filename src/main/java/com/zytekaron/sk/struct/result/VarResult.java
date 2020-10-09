@@ -17,7 +17,9 @@
 package com.zytekaron.sk.struct.result;
 
 import com.zytekaron.sk.types.error.SkError;
+import lombok.Getter;
 
+@Getter
 public class VarResult {
     private SkError error;
     
@@ -32,9 +34,5 @@ public class VarResult {
     public VarResult failure(SkError error) {
         this.error = error;
         return this;
-    }
-    
-    public SkError getError() {
-        return error;
     }
 }

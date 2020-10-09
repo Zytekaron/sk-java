@@ -18,7 +18,9 @@ package com.zytekaron.sk.struct.result;
 
 import com.zytekaron.sk.parse.nodes.Node;
 import com.zytekaron.sk.types.error.SkError;
+import lombok.Getter;
 
+@Getter
 public class ParseResult {
     private Node result;
     private SkError error;

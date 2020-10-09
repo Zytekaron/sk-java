@@ -36,8 +36,8 @@ public class VariableTable {
         this.parent = parent;
     }
     
-    public void put(String name, SkValue value) {
-        variables.put(name, value);
+    public SkValue put(String name, SkValue value) {
+        return variables.put(name, value);
     }
     
     public boolean delete(String name) {

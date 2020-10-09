@@ -17,7 +17,9 @@
 package com.zytekaron.sk.struct.result;
 
 import com.zytekaron.sk.types.error.SkError;
+import lombok.Getter;
 
+@Getter
 public class LexResult<T> {
     private T result;
     private SkError error;
@@ -34,13 +36,5 @@ public class LexResult<T> {
     public LexResult<T> failure(SkError error) {
         this.error = error;
         return this;
-    }
-    
-    public T getResult() {
-        return result;
-    }
-    
-    public SkError getError() {
-        return error;
     }
 }
