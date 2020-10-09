@@ -17,6 +17,7 @@
 package com.zytekaron.sk.parse;
 
 import com.zytekaron.sk.parse.nodes.*;
+import com.zytekaron.sk.struct.Position;
 import com.zytekaron.sk.struct.Token;
 import com.zytekaron.sk.struct.TokenType;
 import com.zytekaron.sk.struct.result.ParseResult;
@@ -75,7 +76,6 @@ public class Parser {
         ParseResult result = new ParseResult();
         
         Node node;
-        
         if (isCurrentTokenKeyword("fn")) {
             ParseResult res = defineFunction();
             node = result.register(res);
@@ -102,9 +102,11 @@ public class Parser {
             }
         }
         
-        if (isCurrentTokenType(SEMICOLON)) {
-            advance(result);
+        if (!isCurrentTokenType(SEMICOLON)) {
+            SkError error = new SkParsingError(currentToken, "Expected ';' but instead found '" + currentToken + "'");
+            return result.failure(error);
         }
+        advance(result);
         return result.success(node);
 //        } else {
 //            SkError error = new SkParsingError(currentToken, "Expected ';' but instead found '" + currentToken + "'");
@@ -133,7 +135,7 @@ public class Parser {
     private ParseResult compExpr() {
         ParseResult result = new ParseResult();
         
-        if (currentToken.getType() == NOT) {
+        if (isCurrentTokenType(NOT)) {
             Token token = currentToken;
             advance(result);
             
@@ -188,31 +190,88 @@ public class Parser {
     
     private ParseResult atom() {
         ParseResult result = new ParseResult();
-        
         Token token = currentToken;
-        TokenType type = token.getType();
         
-        if (NUMBERS.contains(type)) {
+        if (NUMBERS.contains(currentToken.getType())) {
             advance(result);
             Node node = new NumberNode(token);
             return result.success(node);
         }
-        if (type == CHAR) {
+        if (isCurrentTokenType(CHAR)) {
             advance(result);
             Node node = new CharNode(token);
             return result.success(node);
         }
-        if (type == STRING) {
+        if (isCurrentTokenType(STRING)) {
             advance(result);
             Node node = new StringNode(token);
             return result.success(node);
         }
-        if (type == IDENTIFIER) { // todo LATER may need to extract this once calls are implemented
+        if (isCurrentTokenType(IDENTIFIER)) {
+            Token identifier = currentToken;
             advance(result);
+    
+            if (isCurrentTokenType(EQUALS)) {
+                advance(result);
+        
+                ParseResult expression = expression();
+                Node expr = result.register(expression);
+                if (!result.success()) {
+                    return result;
+                }
+        
+                Node node = new VarReassignNode(identifier, expr);
+                return result.success(node);
+            }
+    
+            if (isCurrentTokenType(LBRACKET)) {
+                ParseResult elementResult = expression();
+                Node element = result.register(elementResult);
+                if (!result.success()) {
+                    return result;
+                }
+                
+                if (!isCurrentTokenType(RBRACKET)) {
+                    SkError error = new SkParsingError(currentToken, "Expected ']' but instead found '" + currentToken + "'");
+                    return result.failure(error);
+                }
+                advance(result);
+                
+                Node node = new ElementAccessNode(identifier, element);
+                return result.success(node);
+            }
+    
+            if (isCurrentTokenType(LPAREN)) {
+                List<Node> params = new ArrayList<>();
+    
+                while (!isCurrentTokenType(RPAREN)) {
+                    advance(result);
+                    if (isCurrentTokenType(RPAREN)) {
+                        break;
+                    }
+                    
+                    ParseResult paramResult = expression();
+                    Node param = result.register(paramResult);
+                    if (!result.success()) {
+                        return result;
+                    }
+                    params.add(param);
+                }
+    
+                if (!isCurrentTokenType(RPAREN)) {
+                    SkError error = new SkParsingError(currentToken, "Expected ')' but instead found '" + currentToken + "'");
+                    return result.failure(error);
+                }
+                advance(result);
+    
+                Node node = new FunctionCallNode(identifier, params);
+                return result.success(node);
+            }
+            
             Node node = new VarAccessNode(token);
             return result.success(node);
         }
-        if (type == LPAREN) {
+        if (isCurrentTokenType(LPAREN)) {
             advance(result);
             
             ParseResult expr = expression();
@@ -221,17 +280,90 @@ public class Parser {
                 return result;
             }
             
-            if (currentToken.getType() == RPAREN) {
+            if (isCurrentTokenType(RPAREN)) {
                 advance(result);
                 return result.success(node);
             } else {
                 SkError error = new SkParsingError(currentToken, "Expected ')' but instead found '" + currentToken + "'");
                 return result.failure(error);
             }
-        } else {
-            SkError error = new SkParsingError(currentToken, "Expected factor? but instead found '" + token + "'");
+        }
+        if (isCurrentTokenType(LBRACKET)) {
+            ParseResult arrayResult = arrayLiteral();
+            Node array = result.register(arrayResult);
+            if (!result.success()) {
+                return result;
+            }
+            return result.success(array);
+        }
+        
+        SkError error = new SkParsingError(currentToken, "Expected factor? but instead found '" + token + "'");
+        return result.failure(error);
+    }
+    
+    private ParseResult arrayLiteral() {
+        ParseResult result = new ParseResult();
+        
+        if (!isCurrentTokenType(LBRACKET)) {
+            SkError error = new SkParsingError(currentToken, "Expected '[' but instead found '" + currentToken + "'");
             return result.failure(error);
         }
+        Position start = currentToken.getStart().copy();
+        
+        List<Node> nodes = new ArrayList<>();
+    
+        while (!isCurrentTokenType(RBRACKET)) {
+            advance(result);
+            if (isCurrentTokenType(RBRACKET)) {
+                break;
+            }
+    
+            ParseResult nodeResult = expression();
+            Node node = result.register(nodeResult);
+            if (!result.success()) {
+                return result;
+            }
+            nodes.add(node);
+        }
+    
+        if (!isCurrentTokenType(RBRACKET)) {
+            SkError error = new SkParsingError(currentToken, "Expected ']' but instead found '" + currentToken + "'");
+            return result.failure(error);
+        }
+        Position end = currentToken.getEnd().copy();
+        advance(result);
+        
+        Node node = new ArrayNode(start, end, nodes);
+        return result.success(node);
+    }
+    
+    private ParseResult defineVariable() {
+        ParseResult result = new ParseResult();
+        
+        advance(result);
+        if (!isCurrentTokenType(IDENTIFIER)) {
+            SkError error = new SkParsingError(currentToken, "Expected identifier but instead found " + currentToken.getType());
+            return result.failure(error);
+        }
+        
+        Token variableName = currentToken;
+        advance(result);
+        
+        if (isCurrentTokenType(EQUALS)) {
+            advance(result);
+            
+            ParseResult expression = expression();
+            Node expr = result.register(expression);
+            if (!result.success()) {
+                return result;
+            }
+            
+            Node node = new VarAssignNode(variableName, expr);
+            return result.success(node);
+        }
+        
+        Node node = new VarAssignNode(variableName, null);
+        return result.success(node);
     }
     
     private ParseResult defineFunction() {
@@ -266,19 +398,26 @@ public class Parser {
                 }
                 params.add(param);
             }
-    
+            
             if (!isCurrentTokenType(RPAREN)) {
                 SkError error = new SkParsingError(currentToken, "Expected ')' but instead found '" + currentToken + "'");
                 return result.failure(error);
             }
             advance(result);
         }
+        
+        if (isCurrentTokenType(SEMICOLON)) {
+            advance(result);
+            Node func = new FunctionDefineNode(name, params, new ScopeNode(new ArrayList<>()));
+            return result.success(func);
+        }
+        
         ParseResult scopeResult = strictScope();
         Node scope = result.register(scopeResult);
         if (!result.success()) {
             return result;
         }
-    
+        
         Node func = new FunctionDefineNode(name, params, scope);
         return result.success(func);
     }
@@ -299,21 +438,21 @@ public class Parser {
         Token name = currentToken;
         advance(result);
         
-        // implement COLON type specifier here
+        // todo implement type specifier
         
         Node defaultValue = null;
         if (isCurrentTokenType(EQUALS)) {
             advance(result);
-
+            
             ParseResult defaultResult = expression();
             Node value = result.register(defaultResult);
             if (!result.success()) {
                 return result;
             }
-
+            
             defaultValue = value;
         }
-
+        
         Node param = new FunctionParameterNode(name, defaultValue, spread);
         return result.success(param);
     }
@@ -335,20 +474,15 @@ public class Parser {
     
     private ParseResult strictScope() {
         ParseResult result = new ParseResult();
-    
+        
         if (!isCurrentTokenType(LBRACE)) {
             SkError error = new SkParsingError(currentToken, "Expected '{' but instead found '" + currentToken + "'");
             return result.failure(error);
         }
-    
+        advance(result);
+        
         List<Node> expressions = new ArrayList<>();
         while (!isCurrentTokenType(RBRACE)) {
-            advance(result);
-            
-            if (isCurrentTokenType(RBRACE)) {
-                break;
-            }
-            
             ParseResult expression = primaryExpression();
             Node expr = result.register(expression);
             if (!result.success()) {
@@ -357,7 +491,7 @@ public class Parser {
             
             expressions.add(expr);
         }
-    
+        
         if (!isCurrentTokenType(RBRACE)) {
             SkError error = new SkParsingError(currentToken, "Expected '}' but instead found '" + currentToken + "'");
             return result.failure(error);
@@ -377,6 +511,9 @@ public class Parser {
         
         ParseResult leftParseResult = supplier1.get();
         Node left = result.register(leftParseResult);
+        if (!result.success()) {
+            return result;
+        }
         
         while (isCurrentTokenIn(types)) {
             Token operation = currentToken;
@@ -385,7 +522,6 @@ public class Parser {
             
             ParseResult rightResult = supplier2.get();
             Node right = result.register(rightResult);
-            
             if (!result.success()) {
                 return result;
             }
@@ -394,35 +530,6 @@ public class Parser {
         }
         
         return result.success(left);
-    }
-    
-    private ParseResult defineVariable() {
-        ParseResult result = new ParseResult();
-        
-        advance(result);
-        if (!isCurrentTokenType(IDENTIFIER)) {
-            SkError error = new SkParsingError(currentToken, "Expected identifier but instead found " + currentToken.getType());
-            return result.failure(error);
-        }
-        
-        Token variableName = currentToken;
-        advance(result);
-        
-        if (isCurrentTokenType(EQUALS)) {
-            advance(result);
-            
-            ParseResult expression = expression();
-            Node expr = result.register(expression);
-            if (!result.success()) {
-                return result;
-            }
-            
-            Node node = new VarDefineNode(variableName, expr);
-            return result.success(node);
-        }
-        
-        Node node = new VarDeclareNode(variableName);
-        return result.success(node);
     }
     
     private boolean isCurrentTokenType(TokenType type) {
