@@ -1,7 +1,7 @@
-# jvar
-### Version: 1.3.0
+# sklang
+### Version: ---
 
-SkLang is brand new unnamed, general-purpose programming language designed with three main goals:
+SkLang is brand new general-purpose programming language designed with three main goals:
 - Easy to learn, even if you're a beginner
 - Easy to write, even if you're used to other languages
 - Easy to read, even if you only write in other languages
