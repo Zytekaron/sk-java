@@ -23,12 +23,12 @@ import com.zytekaron.sk.parse.nodes.Node;
 import com.zytekaron.sk.struct.Context;
 import com.zytekaron.sk.struct.Token;
 import com.zytekaron.sk.struct.VariableTable;
-import com.zytekaron.sk.types.SkDouble;
+import com.zytekaron.sk.struct.result.LexResult;
+import com.zytekaron.sk.struct.result.ParseResult;
 import com.zytekaron.sk.types.SkNull;
 import com.zytekaron.sk.types.SkValue;
 import com.zytekaron.sk.types.error.SkError;
-import com.zytekaron.sk.struct.result.LexResult;
-import com.zytekaron.sk.struct.result.ParseResult;
+import com.zytekaron.sk.types.primitive.SkDouble;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -52,7 +52,7 @@ public class Main {
         String content = Objects.requireNonNull(getResourceFileAsString("test.sk"));
         
         run(content);
-//        repl();
+        //        repl();
     }
     
     private static void repl() {
@@ -68,17 +68,19 @@ public class Main {
     private static void run(String text) {
         Lexer lexer = new Lexer(text);
         LexResult<List<Token>> lexerParseResult = lexer.tokenize();
-    
+        
         System.out.println("=== Lexer ===");
         if (!lexerParseResult.success()) {
             lexerParseResult.getError().raise();
             return;
         }
         List<Token> tokens = lexerParseResult.getResult();
-        System.out.println("Tokens: " + tokens);
-    
-//        if (true) return;
-    
+        System.out.println("Tokens: " + tokens.stream()
+                .map(String::valueOf)
+                .collect(Collectors.joining(" ")));
+        
+        //        if (true) return;
+        
         System.out.println("=== Parser ===");
         Parser parser = new Parser(tokens);
         ParseResult headParseResult = parser.parse();
@@ -92,7 +94,7 @@ public class Main {
         
         System.out.println("=== Interpreter ===");
         Interpreter interpreter = new Interpreter();
-        SkValue value = interpreter.visit(node, globalContext);
+        SkValue value = interpreter.visit(node, globalContext).getResult();
         if (value instanceof SkError) {
             ((SkError) value).raise();
             return;
@@ -117,7 +119,7 @@ public class Main {
                 if (in == null) return null;
                 try (InputStreamReader isr = new InputStreamReader(in);
                      BufferedReader reader = new BufferedReader(isr)) {
-                     return reader.lines().collect(Collectors.joining(System.lineSeparator()));
+                    return reader.lines().collect(Collectors.joining(System.lineSeparator()));
                 }
             }
         } catch (IOException e) {

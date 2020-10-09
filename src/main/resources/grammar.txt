@@ -12,7 +12,7 @@ expr            : if-expr
                 : for-expr
                 : while-expr
                 : switch-expr!
-                : comparison (LOGIC_OP comparison)* :*SEMICOLON
+                : comparison (LOGIC_OP comparison)*
 
 comparison      : NOT comparison-expr
                 : arithmetic ((COMP_OP) arithmetic)*
@@ -29,6 +29,7 @@ power           : atom (POW factor)*
 atom            : INT|LONG|DOUBLE|CHAR|STRING
                 : array-lit
                 : object-lit
+                : IDENTIFIER (EQUALS expr)?
                 : LPAREN expr RPAREN
 
 
@@ -46,7 +47,7 @@ switch-expr!    : KEYWORD(switch) LPAREN expr RPAREN LBRACE !! RBRACE
 
 var-def         : KEYWORD(var) IDENTIFIER (EQUALS expression)?
 
-fn-def          : KEYWORD(fn) IDENTIFIER (LPAREN (fn-def-arg (COMMA fn-def-arg)*)? RPAREN)? strict-scope?
+fn-def          : KEYWORD(fn) IDENTIFIER (LPAREN (fn-def-arg (COMMA fn-def-arg)*)? RPAREN)? (SEMICOLON | strict-scope)
 fn-def-arg      : SPREAD? IDENTIFIER (COLON <type>)? (EQUALS expr)?
 fn-call         : IDENTIFIER LPAREN expr (COMMA expr)* RPAREN
 
@@ -73,19 +74,19 @@ OLD RULES
 ------------------------------------------------------------------------------------------------------------------------
 
 expression      : KEYWORD(var) IDENTIFIER EQUALS expression
-                : comparison (LOGIC_OP comparison)*
-
-comparison      : NOT comparison-expr
-                : arithmetic ((COMP_OP) arithmetic)*
-
-arithmetic      : term ((PLUS|MINUS) term)*
-
-term            : factor ((MUL|DIV) factor)*
-
-factor          : (PLUS|MINUS) factor
-                : power
-
-power           : atom (POW factor)*
-
-atom            : INT|LONG|DOUBLE|STRING
-                : LPAREN expr RPAREN
+        \        : comparison/ (LOGIC_OP comparison)*
+         \                 /
+comparison\     : NOT com/parison-expr
+           \    : arithm/etic ((COMP_OP) arithmetic)*
+            \          /
+arithmetic   \  : ter/m ((PLUS|MINUS) term)*
+              \     /
+term           \: f/actor ((MUL|DIV) factor)*
+                \ /
+factor          / \(PLUS|MINUS) factor
+              / : p\ower
+             /      \
+power       /   : ato\m (POW factor)*
+           /          \
+atom      /     : INT|L\ONG|DOUBLE|STRING
+         /      : LPAREN\ expr RPAREN
